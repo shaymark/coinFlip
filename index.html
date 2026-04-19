@@ -13,6 +13,9 @@
 <meta name="mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 <meta name="apple-mobile-web-app-title" content="Flip Treat" />
+<!-- Google AdSense loader — replace ca-pub-XXXXXXXXXXXXXXXX with your publisher ID after approval -->
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX"
+        crossorigin="anonymous"></script>
 <style>
   :root {
     --bg-1: #0f172a;
@@ -39,12 +42,39 @@
   body {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 24px 16px;
     min-height: 100vh;
     min-height: 100svh;
     position: relative;
+  }
+
+  .main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 24px 16px;
+    width: 100%;
+  }
+
+  .ad-slot {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 8px;
+    padding-bottom: calc(6px + env(safe-area-inset-bottom, 0px));
+    background: rgba(0, 0, 0, 0.25);
+    border-top: 1px solid var(--border);
+    min-height: 60px;
+  }
+  .ad-slot ins.adsbygoogle { display: block; }
+  .ad-placeholder {
+    color: var(--muted);
+    font-size: 0.75rem;
+    opacity: 0.5;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
   }
 
   /* Info button */
@@ -305,33 +335,49 @@
 
 <button class="info-btn" id="infoBtn" aria-label="What is this?" title="What is this?">i</button>
 
-<header>
-  <h1>Flip for Your Treat</h1>
-  <p class="subtitle">You finished the task. Now let chance decide the reward.</p>
-</header>
+<main class="main">
+  <header>
+    <h1>Flip for Your Treat</h1>
+    <p class="subtitle">You finished the task. Now let chance decide the reward.</p>
+  </header>
 
-<div class="coin-stage">
-  <div class="coin" id="coin">
-    <div class="face heads">
-      <div class="face-content">
-        <div class="face-icon">👑</div>
-        <div class="face-label">Heads</div>
+  <div class="coin-stage">
+    <div class="coin" id="coin">
+      <div class="face heads">
+        <div class="face-content">
+          <div class="face-icon">👑</div>
+          <div class="face-label">Heads</div>
+        </div>
       </div>
-    </div>
-    <div class="face tails">
-      <div class="face-content">
-        <div class="face-icon">⭐</div>
-        <div class="face-label">Tails</div>
+      <div class="face tails">
+        <div class="face-content">
+          <div class="face-icon">⭐</div>
+          <div class="face-label">Tails</div>
+        </div>
       </div>
     </div>
   </div>
-</div>
 
-<div class="result" id="result"></div>
+  <div class="result" id="result"></div>
 
-<button class="flip-btn" id="flipBtn">Flip the Coin</button>
+  <button class="flip-btn" id="flipBtn">Flip the Coin</button>
 
-<footer>Tap the coin or the button • Tap <b>i</b> to learn why this works</footer>
+  <footer>Tap the coin or the button • Tap <b>i</b> to learn why this works</footer>
+</main>
+
+<!-- AdSense banner slot. After your AdSense account is approved, replace:
+     1. ca-pub-XXXXXXXXXXXXXXXX with your publisher ID in BOTH places below
+     2. data-ad-slot="YYYYYYYYYY" with the slot ID from your AdSense dashboard
+     Also upload an ads.txt file to the repo root with your publisher line. -->
+<aside class="ad-slot" aria-label="Advertisement">
+  <ins class="adsbygoogle"
+       style="display:block; width:100%; max-width:728px;"
+       data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
+       data-ad-slot="YYYYYYYYYY"
+       data-ad-format="auto"
+       data-full-width-responsive="true"></ins>
+  <span class="ad-placeholder" id="adPlaceholder">Advertisement</span>
+</aside>
 
 <div class="modal-overlay" id="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
   <div class="modal">
@@ -538,6 +584,25 @@
       navigator.serviceWorker.register('sw.js').catch(() => {});
     });
   }
+
+  // Activate AdSense unit (no-op if the loader is blocked or not yet approved)
+  try {
+    (window.adsbygoogle = window.adsbygoogle || []).push({});
+  } catch (_) {}
+
+  // Hide the "Advertisement" placeholder once a real ad renders
+  window.addEventListener('load', () => {
+    const ins = document.querySelector('ins.adsbygoogle');
+    const ph = document.getElementById('adPlaceholder');
+    if (!ins || !ph) return;
+    const check = () => {
+      if (ins.getAttribute('data-ad-status') === 'filled' || ins.offsetHeight > 20) {
+        ph.style.display = 'none';
+      }
+    };
+    setTimeout(check, 1500);
+    setTimeout(check, 4000);
+  });
 </script>
 
 </body>
