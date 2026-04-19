@@ -356,12 +356,120 @@
   let isFlipping = false;
   let currentRotation = 0;
 
+  // ---- Audio (Web Audio API — generated, no external files) ----
+  let audioCtx = null;
+  function getAudio() {
+    if (!audioCtx) {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (AC) audioCtx = new AC();
+    }
+    if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+    return audioCtx;
+  }
+
+  function playFlipSound() {
+    const ctx = getAudio();
+    if (!ctx) return;
+    const now = ctx.currentTime;
+    // Whoosh: filtered noise burst
+    const bufferSize = ctx.sampleRate * 0.5;
+    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+    const src = ctx.createBufferSource();
+    src.buffer = buffer;
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'bandpass';
+    filter.frequency.setValueAtTime(400, now);
+    filter.frequency.exponentialRampToValueAtTime(2200, now + 0.35);
+    filter.Q.value = 6;
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0, now);
+    gain.gain.linearRampToValueAtTime(0.25, now + 0.04);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
+    src.connect(filter); filter.connect(gain); gain.connect(ctx.destination);
+    src.start(now); src.stop(now + 0.5);
+
+    // Short metallic "tink" at start
+    const osc = ctx.createOscillator();
+    const og = ctx.createGain();
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(1200, now);
+    osc.frequency.exponentialRampToValueAtTime(600, now + 0.12);
+    og.gain.setValueAtTime(0.15, now);
+    og.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+    osc.connect(og); og.connect(ctx.destination);
+    osc.start(now); osc.stop(now + 0.16);
+  }
+
+  function playLandSound() {
+    const ctx = getAudio();
+    if (!ctx) return;
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const g = ctx.createGain();
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(220, now);
+    osc.frequency.exponentialRampToValueAtTime(80, now + 0.12);
+    g.gain.setValueAtTime(0.18, now);
+    g.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+    osc.connect(g); g.connect(ctx.destination);
+    osc.start(now); osc.stop(now + 0.22);
+  }
+
+  function playWinSound() {
+    const ctx = getAudio();
+    if (!ctx) return;
+    const now = ctx.currentTime;
+    // Cheery arpeggio: C5, E5, G5, C6
+    const notes = [523.25, 659.25, 783.99, 1046.50];
+    notes.forEach((freq, i) => {
+      const t = now + i * 0.11;
+      const osc = ctx.createOscillator();
+      const g = ctx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(freq, t);
+      g.gain.setValueAtTime(0, t);
+      g.gain.linearRampToValueAtTime(0.22, t + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.001, t + 0.35);
+      osc.connect(g); g.connect(ctx.destination);
+      osc.start(t); osc.stop(t + 0.4);
+    });
+  }
+
+  function playLoseSound() {
+    const ctx = getAudio();
+    if (!ctx) return;
+    const now = ctx.currentTime;
+    // Descending sad pair
+    [440, 330].forEach((freq, i) => {
+      const t = now + i * 0.18;
+      const osc = ctx.createOscillator();
+      const g = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, t);
+      g.gain.setValueAtTime(0, t);
+      g.gain.linearRampToValueAtTime(0.15, t + 0.03);
+      g.gain.exponentialRampToValueAtTime(0.001, t + 0.35);
+      osc.connect(g); g.connect(ctx.destination);
+      osc.start(t); osc.stop(t + 0.4);
+    });
+  }
+
+  function vibrate(pattern) {
+    if (navigator.vibrate) navigator.vibrate(pattern);
+  }
+
   function flip() {
     if (isFlipping) return;
     isFlipping = true;
     flipBtn.disabled = true;
     resultEl.classList.remove('show', 'win', 'lose');
     resultEl.textContent = '';
+
+    // Start feedback
+    vibrate(30);
+    playFlipSound();
 
     const isHeads = Math.random() < 0.5;
     const fullSpins = 5 + Math.floor(Math.random() * 3); // 5-7 spins
@@ -380,12 +488,23 @@
       coin.style.transform = `rotateY(${endRotation}deg)`;
       currentRotation = endRotation;
 
+      playLandSound();
+
       if (isHeads) {
         resultEl.textContent = '🎉 Heads — Enjoy your treat!';
         resultEl.classList.add('win');
+        // Celebratory vibration pattern & chime
+        setTimeout(() => {
+          vibrate([60, 40, 60, 40, 120]);
+          playWinSound();
+        }, 120);
       } else {
         resultEl.textContent = '🙈 Tails — no treat this time. Great job anyway!';
         resultEl.classList.add('lose');
+        setTimeout(() => {
+          vibrate(40);
+          playLoseSound();
+        }, 120);
       }
       resultEl.classList.add('show');
 
