@@ -1,3 +1,1 @@
-# After your AdSense account is approved, replace the line below with:
-# google.com, pub-XXXXXXXXXXXXXXXX, DIRECT, f08c47fec0942fa0
-# (get your publisher ID from AdSense → Account → Account information)
+google.com, pub-7126582652958122, DIRECT, f08c47fec0942fa0
