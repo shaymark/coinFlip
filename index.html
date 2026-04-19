@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>Flip for Your Treat</title>
+<style>
+  :root {
+    --bg-1: #0f172a;
+    --bg-2: #1e293b;
+    --accent: #fbbf24;
+    --accent-dark: #b45309;
+    --text: #f8fafc;
+    --muted: #cbd5e1;
+    --card: rgba(255, 255, 255, 0.06);
+    --border: rgba(255, 255, 255, 0.12);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    height: 100%;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    color: var(--text);
+    background: radial-gradient(ellipse at top, #1e293b 0%, #0f172a 60%, #020617 100%);
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 24px 16px;
+    min-height: 100vh;
+    min-height: 100svh;
+    position: relative;
+  }
+
+  /* Info button */
+  .info-btn {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    background: var(--card);
+    color: var(--text);
+    font-size: 20px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    transition: transform 0.2s ease, background 0.2s ease;
+    z-index: 10;
+  }
+  .info-btn:hover { transform: scale(1.08); background: rgba(255,255,255,0.12); }
+  .info-btn:active { transform: scale(0.95); }
+
+  header {
+    text-align: center;
+    margin-bottom: 32px;
+    max-width: 500px;
+  }
+  h1 {
+    font-size: clamp(1.8rem, 5vw, 2.6rem);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin-bottom: 8px;
+    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .subtitle {
+    color: var(--muted);
+    font-size: clamp(0.9rem, 2.5vw, 1.05rem);
+    line-height: 1.5;
+  }
+
+  /* Coin */
+  .coin-stage {
+    width: 100%;
+    max-width: 340px;
+    height: 340px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    perspective: 1200px;
+    margin-bottom: 32px;
+  }
+
+  .coin {
+    position: relative;
+    width: 220px;
+    height: 220px;
+    transform-style: preserve-3d;
+    transition: transform 0.1s linear;
+    cursor: pointer;
+  }
+
+  @media (max-width: 400px) {
+    .coin-stage { height: 280px; }
+    .coin { width: 180px; height: 180px; }
+  }
+
+  .face {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    backface-visibility: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+    box-shadow:
+      inset 0 0 0 6px rgba(0,0,0,0.15),
+      inset 0 0 0 10px rgba(255,255,255,0.25),
+      0 20px 40px rgba(0,0,0,0.5),
+      0 0 60px rgba(251, 191, 36, 0.25);
+    user-select: none;
+  }
+
+  .heads {
+    background:
+      radial-gradient(circle at 30% 30%, #fde68a 0%, #fbbf24 35%, #d97706 80%, #92400e 100%);
+    color: #7c2d12;
+    transform: rotateY(0deg) translateZ(4px);
+  }
+  .tails {
+    background:
+      radial-gradient(circle at 30% 30%, #fde68a 0%, #fbbf24 35%, #d97706 80%, #92400e 100%);
+    color: #7c2d12;
+    transform: rotateY(180deg) translateZ(4px);
+  }
+
+  .face-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    text-shadow: 0 2px 4px rgba(255,255,255,0.4);
+  }
+  .face-icon { font-size: clamp(3.5rem, 10vw, 4.5rem); line-height: 1; }
+  .face-label {
+    font-size: clamp(0.9rem, 2.5vw, 1.1rem);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+  }
+
+  /* Edge effect */
+  .coin::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    border-radius: 50%;
+    background: linear-gradient(90deg, #92400e, #fbbf24, #92400e);
+    transform: translateZ(0);
+  }
+
+  /* Flipping animation */
+  .coin.flipping {
+    animation: flip-spin 2.2s cubic-bezier(0.2, 0.7, 0.3, 1) forwards;
+  }
+  .coin.result-heads { transform: rotateY(0deg); }
+  .coin.result-tails { transform: rotateY(180deg); }
+
+  @keyframes flip-spin {
+    0%   { transform: rotateY(0) translateY(0) scale(1); }
+    20%  { transform: rotateY(720deg) translateY(-60px) scale(1.05); }
+    50%  { transform: rotateY(1800deg) translateY(-100px) scale(1.08); }
+    80%  { transform: rotateY(2880deg) translateY(-40px) scale(1.03); }
+    100% { transform: rotateY(var(--end-rotation, 3600deg)) translateY(0) scale(1); }
+  }
+
+  /* Result text */
+  .result {
+    min-height: 40px;
+    font-size: 1.3rem;
+    font-weight: 600;
+    margin-bottom: 20px;
+    text-align: center;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: opacity 0.4s ease, transform 0.4s ease;
+  }
+  .result.show { opacity: 1; transform: translateY(0); }
+  .result.win { color: #34d399; }
+  .result.lose { color: #f87171; }
+
+  /* Flip button */
+  .flip-btn {
+    border: none;
+    padding: 16px 40px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    border-radius: 999px;
+    background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+    color: #422006;
+    cursor: pointer;
+    box-shadow: 0 10px 25px rgba(251, 191, 36, 0.35);
+    transition: transform 0.15s ease, box-shadow 0.2s ease;
+    min-width: 200px;
+  }
+  .flip-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 14px 30px rgba(251, 191, 36, 0.45);
+  }
+  .flip-btn:active:not(:disabled) { transform: translateY(0); }
+  .flip-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+  /* Modal */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(2, 6, 23, 0.75);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    z-index: 100;
+    opacity: 0;
+    transition: opacity 0.25s ease;
+  }
+  .modal-overlay.show { display: flex; opacity: 1; }
+
+  .modal {
+    background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 32px 28px;
+    max-width: 480px;
+    width: 100%;
+    max-height: 85vh;
+    overflow-y: auto;
+    position: relative;
+    transform: scale(0.95);
+    transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.3, 1);
+    box-shadow: 0 30px 80px rgba(0,0,0,0.6);
+  }
+  .modal-overlay.show .modal { transform: scale(1); }
+
+  .modal h2 {
+    font-size: 1.4rem;
+    margin-bottom: 16px;
+    color: var(--accent);
+  }
+  .modal p {
+    color: var(--muted);
+    line-height: 1.65;
+    margin-bottom: 14px;
+    font-size: 0.98rem;
+  }
+  .modal p strong { color: var(--text); }
+
+  .close-btn {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(255,255,255,0.08);
+    color: var(--text);
+    font-size: 20px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s ease;
+  }
+  .close-btn:hover { background: rgba(255,255,255,0.15); }
+
+  footer {
+    margin-top: 28px;
+    font-size: 0.8rem;
+    color: var(--muted);
+    opacity: 0.7;
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+
+<button class="info-btn" id="infoBtn" aria-label="What is this?" title="What is this?">i</button>
+
+<header>
+  <h1>Flip for Your Treat</h1>
+  <p class="subtitle">You finished the task. Now let chance decide the reward.</p>
+</header>
+
+<div class="coin-stage">
+  <div class="coin" id="coin">
+    <div class="face heads">
+      <div class="face-content">
+        <div class="face-icon">👑</div>
+        <div class="face-label">Heads</div>
+      </div>
+    </div>
+    <div class="face tails">
+      <div class="face-content">
+        <div class="face-icon">⭐</div>
+        <div class="face-label">Tails</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="result" id="result"></div>
+
+<button class="flip-btn" id="flipBtn">Flip the Coin</button>
+
+<footer>Tap the coin or the button • Tap <b>i</b> to learn why this works</footer>
+
+<div class="modal-overlay" id="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+  <div class="modal">
+    <button class="close-btn" id="closeBtn" aria-label="Close">×</button>
+    <h2 id="modalTitle">Why a coin flip?</h2>
+    <p>For many people with <strong>ADHD</strong>, finishing a task is hard — the brain struggles to stay engaged without a clear payoff at the end.</p>
+    <p>A common trick is to <strong>reward yourself</strong> when you're done. It works… at first. But if the reward is <em>guaranteed every time</em>, the brain quickly gets used to it and the motivational spark fades.</p>
+    <p>Research on <strong>variable rewards</strong> suggests a better approach: after finishing a task, <strong>flip a coin</strong>. Heads — you get the treat. Tails — you don't.</p>
+    <p>Because the outcome is uncertain, your brain keeps releasing dopamine in anticipation. The surprise stays fresh, and the motivation keeps working. 🧠✨</p>
+    <p style="font-size: 0.85rem; opacity: 0.7; margin-top: 20px;">Not medical advice — just a fun tool based on behavioral science.</p>
+  </div>
+</div>
+
+<script>
+  const coin = document.getElementById('coin');
+  const flipBtn = document.getElementById('flipBtn');
+  const resultEl = document.getElementById('result');
+  const infoBtn = document.getElementById('infoBtn');
+  const modal = document.getElementById('modal');
+  const closeBtn = document.getElementById('closeBtn');
+
+  let isFlipping = false;
+  let currentRotation = 0;
+
+  function flip() {
+    if (isFlipping) return;
+    isFlipping = true;
+    flipBtn.disabled = true;
+    resultEl.classList.remove('show', 'win', 'lose');
+    resultEl.textContent = '';
+
+    const isHeads = Math.random() < 0.5;
+    const fullSpins = 5 + Math.floor(Math.random() * 3); // 5-7 spins
+    const endRotation = fullSpins * 360 + (isHeads ? 0 : 180);
+
+    // Reset animation
+    coin.classList.remove('flipping');
+    coin.style.transform = `rotateY(${currentRotation}deg)`;
+    void coin.offsetWidth; // force reflow
+
+    coin.style.setProperty('--end-rotation', endRotation + 'deg');
+    coin.classList.add('flipping');
+
+    setTimeout(() => {
+      coin.classList.remove('flipping');
+      coin.style.transform = `rotateY(${endRotation}deg)`;
+      currentRotation = endRotation;
+
+      if (isHeads) {
+        resultEl.textContent = '🎉 Heads — Enjoy your treat!';
+        resultEl.classList.add('win');
+      } else {
+        resultEl.textContent = '🙈 Tails — no treat this time. Great job anyway!';
+        resultEl.classList.add('lose');
+      }
+      resultEl.classList.add('show');
+
+      isFlipping = false;
+      flipBtn.disabled = false;
+    }, 2200);
+  }
+
+  flipBtn.addEventListener('click', flip);
+  coin.addEventListener('click', flip);
+
+  function openModal() { modal.classList.add('show'); }
+  function closeModal() { modal.classList.remove('show'); }
+
+  infoBtn.addEventListener('click', openModal);
+  closeBtn.addEventListener('click', closeModal);
+  modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeModal();
+    if (e.key === ' ' || e.key === 'Enter') {
+      if (!modal.classList.contains('show') && document.activeElement !== flipBtn) {
+        e.preventDefault();
+        flip();
+      }
+    }
+  });
+</script>
+
+</body>
+</html>
